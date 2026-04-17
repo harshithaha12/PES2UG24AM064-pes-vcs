@@ -119,8 +119,47 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     memcpy(full_data + header_len, data, len);
     compute_hash(full_data, header_len + len, id_out);
 
+    char hex[65];
+    char path[1024];
+    char dir[1024];
+
+    hash_to_hex(id_out, hex);
+    object_path(id_out, path, sizeof(path));
+
+    if (object_exists(id_out)) {
+        free(full_data);
+        return 0;
+    }
+
+    /* create .pes directory */
+    mkdir(".pes", 0777);
+
+    /* create .pes/objects directory */
+    mkdir(".pes/objects", 0777);
+
+    /* create shard directory .pes/objects/ab */
+    snprintf(dir, sizeof(dir), ".pes/objects/%.2s", hex);
+    mkdir(dir, 0777);
+
+    /* temp file inside shard folder */
+    char temp_path[1024];
+    strncpy(temp_path, path, sizeof(temp_path) - 5);
+    temp_path[sizeof(temp_path) - 5] = '\0';
+    strcat(temp_path, ".tmp");
+
+    FILE *fp = fopen(temp_path, "wb");
+    if (!fp) {
+        free(full_data);
+        return -1;
+    }
+
+    fwrite(full_data, 1, header_len + len, fp);
+    fclose(fp);
+
+    rename(temp_path, path);
+
     free(full_data);
-    return -1;
+    return 0;
 }
 
 // Read an object from the store.
