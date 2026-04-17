@@ -17,6 +17,8 @@
 #include <sys/stat.h>
 #include "index.h"
 
+int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
+
 // ─── Mode Constants ─────────────────────────────────────────────────────────
 
 #define MODE_FILE      0100644
@@ -142,13 +144,26 @@ int tree_from_index(ObjectID *id_out) {
     Tree root;
     root.count = 0;
 
-    /* Example subtree placeholder: src */
+    /* Example subtree placeholder */
     TreeEntry *e = &root.entries[root.count++];
 
-    e->mode = 040000;   // directory mode
+    e->mode = 040000;
     memset(&e->hash, 0, sizeof(ObjectID));
     strcpy(e->name, "src");
 
-    (void)id_out;
-    return -1;
+    /* serialize tree */
+    void *data = NULL;
+    size_t len = 0;
+
+    if (tree_serialize(&root, &data, &len) != 0)
+        return -1;
+
+    /* write tree object */
+    if (object_write(OBJ_TREE, data, len, id_out) != 0) {
+        free(data);
+        return -1;
+    }
+
+    free(data);
+    return 0;
 }
