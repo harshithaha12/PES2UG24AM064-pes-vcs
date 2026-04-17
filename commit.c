@@ -197,6 +197,33 @@ int head_update(const ObjectID *new_commit) {
 int commit_create(const char *message, ObjectID *commit_id_out) {
     // TODO: Implement commit creation
     // (See Lab Appendix for logical steps)
-    (void)message; (void)commit_id_out;
+    Commit commit;
+
+    /* Step 1: build tree from index */
+    if (tree_from_index(&commit.tree) != 0)
+        return -1;
+
+    /* Step 2: read HEAD as parent if exists */
+    if (head_read(&commit.parent) == 0)
+        commit.has_parent = 1;
+    else
+        commit.has_parent = 0;
+
+    /* Step 3: author */
+    const char *author = getenv("PES_AUTHOR");
+    if (!author)
+        author = "Unknown";
+
+    strncpy(commit.author, author, sizeof(commit.author) - 1);
+    commit.author[sizeof(commit.author) - 1] = '\0';
+
+    /* Step 4: timestamp */
+    commit.timestamp = (uint64_t)time(NULL);
+
+    /* Step 5: message */
+    strncpy(commit.message, message, sizeof(commit.message) - 1);
+    commit.message[sizeof(commit.message) - 1] = '\0';
+
+    (void)commit_id_out;
     return -1;
 }
