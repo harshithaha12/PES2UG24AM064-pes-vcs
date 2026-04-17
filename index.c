@@ -138,8 +138,27 @@ int index_status(const Index *index) {
 int index_load(Index *index) {
     // TODO: Implement index loading
     // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+    FILE *fp = fopen(".pes/index", "r");
+
+    index->count = 0;
+
+    if (!fp) {
+        return 0;
+    }
+
+    char line[1024];
+
+    while (fgets(line, sizeof(line), fp)) {
+
+        /* skip empty lines */
+        if (line[0] == '\n' || line[0] == '\0')
+            continue;
+
+        /* parsing of real entries comes later */
+    }
+
+    fclose(fp);
+    return 0;
 }
 
 // Save the index to .pes/index atomically.
