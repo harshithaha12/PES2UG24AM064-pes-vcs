@@ -120,7 +120,6 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     compute_hash(full_data, header_len + len, id_out);
 
     free(full_data);
-    (void)id_out;
     return -1;
 }
 
