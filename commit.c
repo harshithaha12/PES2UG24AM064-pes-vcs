@@ -86,13 +86,13 @@ int commit_serialize(const Commit *commit, void **data_out, size_t *len_out) {
         n += snprintf(buf + n, sizeof(buf) - n, "parent %s\n", parent_hex);
     }
     n += snprintf(buf + n, sizeof(buf) - n,
-                  "author %s %" PRIu64 "\n"
-                  "committer %s %" PRIu64 "\n"
-                  "\n"
-                  "%s",
-                  commit->author, commit->timestamp,
-                  commit->author, commit->timestamp,
-                  commit->message);
+                "author %s %" PRIu64 "\n"
+                "committer %s %" PRIu64 "\n"
+                "\n"
+                "%s",
+                commit->author, commit->timestamp,
+                commit->author, commit->timestamp,
+                commit->message);
 
     *data_out = malloc(n + 1);
     if (!*data_out) return -1;
@@ -193,6 +193,7 @@ int head_update(const ObjectID *new_commit) {
 //   - head_update       : moves the branch pointer to your new commit
 //
 // Returns 0 on success, -1 on error.
+// Phase 4 start: commit/history implementation plan
 int commit_create(const char *message, ObjectID *commit_id_out) {
     // TODO: Implement commit creation
     // (See Lab Appendix for logical steps)
