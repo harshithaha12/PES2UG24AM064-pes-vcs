@@ -241,6 +241,10 @@ int index_add(Index *index, const char *path) {
 
     free(data);
 
+    struct stat st;
+    if (stat(path, &st) != 0)
+        return -1;
+
     IndexEntry *e = index_find(index, path);
 
     if (!e) {
@@ -250,10 +254,10 @@ int index_add(Index *index, const char *path) {
         e = &index->entries[index->count++];
     }
 
-    e->mode = 100644;
+    e->mode = (st.st_mode & S_IXUSR) ? 100755 : 100644;
     e->hash = hash;
     e->size = (uint32_t)size;
-    e->mtime_sec = 0;
+    e->mtime_sec = (uint64_t)st.st_mtime;
 
     strncpy(e->path, path, sizeof(e->path) - 1);
     e->path[sizeof(e->path) - 1] = '\0';
