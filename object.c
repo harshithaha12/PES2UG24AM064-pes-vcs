@@ -186,6 +186,78 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
 // Returns 0 on success, -1 on error (file not found, corrupt, etc.).
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out) {
     // TODO: Implement
-    (void)id; (void)type_out; (void)data_out; (void)len_out;
-    return -1;
+    char path[1024];
+    object_path(id, path, sizeof(path));
+
+    FILE *fp = fopen(path, "rb");
+    if (!fp)
+        return -1;
+
+    /* get file size */
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    rewind(fp);
+
+    if (file_size <= 0) {
+        fclose(fp);
+        return -1;
+    }
+
+    unsigned char *buf = malloc(file_size);
+    if (!buf) {
+        fclose(fp);
+        return -1;
+    }
+
+    size_t bytes_read = fread(buf, 1, file_size, fp);
+    fclose(fp);
+
+    if (bytes_read != (size_t)file_size) {
+        free(buf);
+        return -1;
+    }
+
+    /* verify hash */
+    ObjectID check_id;
+    compute_hash(buf, file_size, &check_id);
+
+    if (memcmp(id, &check_id, sizeof(ObjectID)) != 0) {
+        free(buf);
+        return -1;
+    }
+
+    /* parse header */
+    char type_str[20];
+    size_t size = 0;
+
+    sscanf((char *)buf, "%19s %zu", type_str, &size);
+
+    char *nul = memchr(buf, '\0', file_size);
+    if (!nul) {
+        free(buf);
+        return -1;
+    }
+
+    size_t header_len = (nul - (char *)buf) + 1;
+
+    /* determine type */
+    if (strcmp(type_str, "blob") == 0)
+        *type_out = OBJ_BLOB;
+    else if (strcmp(type_str, "tree") == 0)
+        *type_out = OBJ_TREE;
+    else
+        *type_out = OBJ_COMMIT;
+
+    /* extract data */
+    *data_out = malloc(size);
+    if (!*data_out) {
+        free(buf);
+        return -1;
+    }
+
+    memcpy(*data_out, buf + header_len, size);
+    *len_out = size;
+
+    free(buf);
+    return 0;
 }
