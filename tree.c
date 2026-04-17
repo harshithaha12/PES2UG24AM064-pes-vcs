@@ -142,7 +142,13 @@ int tree_from_index(ObjectID *id_out) {
     Tree root;
     root.count = 0;
 
-    (void)root;
+    /* Example subtree placeholder: src */
+    TreeEntry *e = &root.entries[root.count++];
+
+    e->mode = 040000;   // directory mode
+    memset(&e->hash, 0, sizeof(ObjectID));
+    strcpy(e->name, "src");
+
     (void)id_out;
     return -1;
 }
