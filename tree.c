@@ -15,6 +15,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include "index.h"
 
 // ─── Mode Constants ─────────────────────────────────────────────────────────
 
@@ -137,6 +138,11 @@ int tree_from_index(ObjectID *id_out) {
     // Build nested subtrees
     // Serialize trees
     // Write root tree object
+
+    Tree root;
+    root.count = 0;
+
+    (void)root;
     (void)id_out;
     return -1;
 }
